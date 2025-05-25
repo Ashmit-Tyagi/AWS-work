@@ -45,9 +45,11 @@ Private EC2 → pvt-key.pem
 
 
 ### 5. SSH into the Bastion Host
+
 From your local system, run:
 
   `ssh -i "path/to/bastion-key.pem" ubuntu@<public-ip-of-bastion>`
+  
 Send the Private Key to Bastion Host
 
 ![Screenshot 2025-05-26 004114](https://github.com/user-attachments/assets/37433f54-6fd1-4e43-8208-a75174d9d6d9)
@@ -56,9 +58,11 @@ Send the Private Key to Bastion Host
 Still from your local machine, send the private EC2 key:
 
   `scp -i "path/to/bastion-key.pem" path/to/private-key.pem ubuntu@<public-ip-of-bastion>:~`
+  
 SSH into Bastion Again & Set Permissions
 
 chmod 400 private-key.pem
+
 Now SSH into the Private EC2 from Bastion Host
 
   `ssh -i private-key.pem ubuntu@<private-ip-of-private-ec2>`
