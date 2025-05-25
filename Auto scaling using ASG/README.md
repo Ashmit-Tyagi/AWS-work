@@ -15,7 +15,7 @@
 
 - Once the EC2 is configured:
   - Go to Actions → Image → Create Image
-  - Name it (e.g., `MyWebServerAMI`)
+  - Name it (e.g., `MyWebServer`)
 
 ![Screenshot 2025-05-26 013515](https://github.com/user-attachments/assets/d0f7d12f-8d74-4608-9d54-f26160df46f8)
 
