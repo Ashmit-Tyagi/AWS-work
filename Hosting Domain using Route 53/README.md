@@ -14,8 +14,7 @@ c. Update Name Servers
   - Copy the NS records from Route 53.
   - Go to your domain registrar's DNS settings.
   - Replace their NS records with those from Route 53.
-
-Request SSL Certificate (HTTPS)
+  - Request SSL Certificate (HTTPS)
 
 d. Go to AWS Certificate Manager (ACM).
   - Request a public certificate for both yourdomain.com and *.yourdomain.com.
