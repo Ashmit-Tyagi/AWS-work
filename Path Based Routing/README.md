@@ -1,66 +1,70 @@
-# Connect to a Private EC2 Instance Using a Bastion Host #
+# Path-Based Routing with Application Load Balancer (ALB) 
 
-Steps :
+## Set up an Application Load Balancer (ALB) that routes HTTP requests based on the request path:
 
-### 1. Create a VPC
-  `CIDR block: 10.0.0.0/16`
-  
-  ![Screenshot 2025-05-25 234719](https://github.com/user-attachments/assets/a70f0809-f695-4788-88d0-5592faf163a5)
-  
+http://<ALB-DNS>/app1 → forwarded to Target Group A
 
-### 2. Create Two Subnets: 
+http://<ALB-DNS>/app2 → forwarded to Target Group B
 
-  `Public Subnet: 10.0.1.0/24`
+### 1️. Launch Two EC2 Instances
 
-  `Private Subnet: 10.0.2.0/24`
+One instance serves the /app1 path 
 
-  ![Screenshot 2025-05-25 234936](https://github.com/user-attachments/assets/3ea83189-cdde-47bd-a8b7-f14814d2b799)
+Another serves the /app2 path
+
+![Screenshot 2025-05-26 154630](https://github.com/user-attachments/assets/043cb907-d97b-4fee-801b-c2c1a24f929c)
 
 
-### 3. Set Up Internet Access
+Install a web server (e.g., Nginx) on both and configure different content for each path.
 
-a. Create an Internet Gateway and attach it to your VPC
+![Screenshot 2025-05-26 160525](https://github.com/user-attachments/assets/0f622055-eb65-4825-9fbe-37af4e13b384)
 
-![Screenshot 2025-05-25 235041](https://github.com/user-attachments/assets/9f466bfc-4520-4839-9090-ffc138efcf60)
-
-
-b. Update the route table for the public subnet:
-
-Add route 0.0.0.0/0 → target the Internet Gateway
-
-![Screenshot 2025-05-25 235528](https://github.com/user-attachments/assets/befd8a5e-e028-4a27-9594-d652ebee31de)
+![Screenshot 2025-05-26 160401](https://github.com/user-attachments/assets/a67e1ef1-4889-41d5-9a4f-90c532358c97)
 
 
-### 4. Launch EC2 Instances
+### 2. Create Two Target Groups
 
-One in the public subnet = Bastion host
+Target Group A: Register the EC2 instance serving /app1
 
-One in the private subnet = Private instance
+Target Group B: Register the EC2 instance serving /app2
 
-Use different key pairs for both:
-
-Bastion EC2 → bastion.pem
-
-Private EC2 → pvt-key.pem
+![Screenshot 2025-05-26 160700](https://github.com/user-attachments/assets/355cfc28-a13a-464e-aca9-fdaf88984de4)
 
 
-### 5. SSH into the Bastion Host
-From your local system, run:
+### 3. Create an Application Load Balancer
 
-  `ssh -i "path/to/bastion-key.pem" ubuntu@<public-ip-of-bastion>`
-Send the Private Key to Bastion Host
+Choose Application Load Balancer, set it to internet-facing
 
-![Screenshot 2025-05-26 004114](https://github.com/user-attachments/assets/37433f54-6fd1-4e43-8208-a75174d9d6d9)
+Select at least two subnets across different availability zones
+
+Attach a Security Group that allows inbound HTTP (port 80)
+
+![Screenshot 2025-05-26 160817](https://github.com/user-attachments/assets/8b38d3f1-100c-4404-8156-0e7b26860e74)
 
 
-Still from your local machine, send the private EC2 key:
+### 4. Configure Listener & Routing Rules
 
-  `scp -i "path/to/bastion-key.pem" path/to/private-key.pem ubuntu@<public-ip-of-bastion>:~`
-SSH into Bastion Again & Set Permissions
+Listener: HTTP on port 80
 
-chmod 400 private-key.pem
-Now SSH into the Private EC2 from Bastion Host
+Rules:
 
-  `ssh -i private-key.pem ubuntu@<private-ip-of-private-ec2>`
+- If path is /app2, forward to Target Group B
 
-![Screenshot 2025-05-26 005641](https://github.com/user-attachments/assets/4fcefc77-9316-4f4b-8c8b-a7e16f5698f8)
+- Default rule (i.e., /app1) forwards to Target Group A
+
+  ![Screenshot 2025-05-26 161057](https://github.com/user-attachments/assets/75163bed-a2b2-4339-986f-96dc0f8a5656)
+
+
+### 5.  Test the Routing
+
+Open a browser and verify:
+
+http://<ALB-DNS>/app1 → displays content from Target Group A
+
+![Screenshot 2025-05-26 161209](https://github.com/user-attachments/assets/ff35e82b-db89-47fa-a7a0-1b895b2960a2)
+
+
+http://<ALB-DNS>/app2 → displays content from Target Group B
+
+![Screenshot 2025-05-26 161225](https://github.com/user-attachments/assets/dcc42186-25a1-4f15-9486-885893de0663)
+
