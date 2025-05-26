@@ -51,9 +51,8 @@ b. Configure Listeners
       1. Attach the SSL certificate from ACM
 
   - Add routing rules:
-      1. Path-based routing: e.g., /app1 → Target Group A, /app2 → Target Group B
-      2. Host-based routing: e.g., api.yourdomain.com → Target Group A, web.yourdomain.com → Target Group B
-
+      1. Path-based routing: e.g., /app1 → Target Group A
+      2. Host-based routing: e.g., api.yourdomain.com → Target Group A
 
 
 ### 4.DNS Configuration in Route 53
