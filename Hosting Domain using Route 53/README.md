@@ -1,66 +1,87 @@
-# Connect to a Private EC2 Instance Using a Bastion Host #
+# Hosting a Domain with Route 53 and Configuring Path & Host-Based Routing via ALB
 
 Steps :
 
-### 1. Create a VPC
-  `CIDR block: 10.0.0.0/16`
-  
-  ![Screenshot 2025-05-25 234719](https://github.com/user-attachments/assets/a70f0809-f695-4788-88d0-5592faf163a5)
-  
+### 1.Domain Setup with Route 53
 
-### 2. Create Two Subnets: 
+a. Buy a Domain
+  - Purchase a domain from a registrar like GoDaddy, Namecheap, or Hostinger.
 
-  `Public Subnet: 10.0.1.0/24`
+b. Create Hosted Zone
+  - Go to the Route 53 console and create a Hosted Zone for your domain.
 
-  `Private Subnet: 10.0.2.0/24`
+c. Update Name Servers
+  - Copy the NS records from Route 53.
+  - Go to your domain registrar's DNS settings.
+  - Replace their NS records with those from Route 53.
 
-  ![Screenshot 2025-05-25 234936](https://github.com/user-attachments/assets/3ea83189-cdde-47bd-a8b7-f14814d2b799)
+Request SSL Certificate (HTTPS)
 
-
-### 3. Set Up Internet Access
-
-a. Create an Internet Gateway and attach it to your VPC
-
-![Screenshot 2025-05-25 235041](https://github.com/user-attachments/assets/9f466bfc-4520-4839-9090-ffc138efcf60)
+d. Go to AWS Certificate Manager (ACM).
+  - Request a public certificate for both yourdomain.com and *.yourdomain.com.
+  - Validate ownership by adding the CNAME record provided by ACM to your Route 53 hosted zone.
 
 
-b. Update the route table for the public subnet:
 
-Add route 0.0.0.0/0 → target the Internet Gateway
+### 2. Application Setup on EC2
 
-![Screenshot 2025-05-25 235528](https://github.com/user-attachments/assets/befd8a5e-e028-4a27-9594-d652ebee31de)
+a. Launch EC2 Instances
+  - Install Nginx or any web server.
+  - Configure apps to listen on different ports (e.g., 80, 7764, 9097).
+
+b. Create Target Groups
+  - Navigate to EC2 > Target Groups.
+  - Create separate target groups for each app.
+  - Register corresponding EC2 instances and specify ports and health checks.
+
+### 3. ALB Setup with Routing Rules
+
+a. Create Application Load Balancer
+  - Choose Application Load Balancer, internet-facing
+  - Select 2+ Availability Zones
+  - Use the same VPC as your EC2 instances
+  - Attach a Security Group that allows:
+    1. HTTP (port 80)
+    2. HTTPS (port 443)
+
+b. Configure Listeners
+  - HTTP Listener (Port 80)
+      1. Add a redirect rule to forward all HTTP traffic to HTTPS
+
+  - HTTPS Listener (Port 443)
+      1. Attach the SSL certificate from ACM
+
+  - Add routing rules:
+      1. Path-based routing: e.g., /app1 → Target Group A, /app2 → Target Group B
+      2. Host-based routing: e.g., api.yourdomain.com → Target Group A, web.yourdomain.com → Target Group B
 
 
-### 4. Launch EC2 Instances
 
-One in the public subnet = Bastion host
+### 4.DNS Configuration in Route 53
 
-One in the private subnet = Private instance
+- Go to your domain’s hosted zone in Route 53
 
-Use different key pairs for both:
+- Create an A Record:
+  1. Record name: @ (or subdomain like api)
+  2. Type: A – IPv4 address
+  3. Alias: Yes
+  4. Alias Target: Choose the ALB DNS name from the dropdown
+ 
+This connects your domain to the ALB, enabling secure HTTPS access and enforcing your routing rules.
 
-Bastion EC2 → bastion.pem
-
-Private EC2 → pvt-key.pem
-
-
-### 5. SSH into the Bastion Host
-From your local system, run:
-
-  `ssh -i "path/to/bastion-key.pem" ubuntu@<public-ip-of-bastion>`
-Send the Private Key to Bastion Host
-
-![Screenshot 2025-05-26 004114](https://github.com/user-attachments/assets/37433f54-6fd1-4e43-8208-a75174d9d6d9)
+![Screenshot 2025-05-26 161335](https://github.com/user-attachments/assets/617ce8fe-d86e-4693-9364-a46bc67f7892)
 
 
-Still from your local machine, send the private EC2 key:
+### Final Result
 
-  `scp -i "path/to/bastion-key.pem" path/to/private-key.pem ubuntu@<public-ip-of-bastion>:~`
-SSH into Bastion Again & Set Permissions
+With this setup:
 
-chmod 400 private-key.pem
-Now SSH into the Private EC2 from Bastion Host
+  - https://yourdomain.com/app1 routes to one EC2 instance
 
-  `ssh -i private-key.pem ubuntu@<private-ip-of-private-ec2>`
+    ![Screenshot 2025-05-26 161409](https://github.com/user-attachments/assets/f20ac675-2a41-4719-a5c9-a4156fc56109)
 
-![Screenshot 2025-05-26 005641](https://github.com/user-attachments/assets/4fcefc77-9316-4f4b-8c8b-a7e16f5698f8)
+  - All traffic is secured via HTTPS using ACM
+    
+  - Domain is managed via Route 53
+
+    ![Screenshot 2025-05-26 161438](https://github.com/user-attachments/assets/75856920-8eaa-493b-97b3-d89fafc5541c)
