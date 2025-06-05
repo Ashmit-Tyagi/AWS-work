@@ -28,7 +28,7 @@
 
 By using both EBS Snapshots and custom AMIs, we demonstrated how to:
 
-	•	Back up and clone EC2 environments
+	•	Back up and clone EC2 env
  
 	•	Recover data
  
