@@ -27,7 +27,11 @@
 ## Summary
 
 By using both EBS Snapshots and custom AMIs, we demonstrated how to:
+
 	•	Back up and clone EC2 environments
+ 
 	•	Recover data
+ 
 	•	Ensure system consistency
+ 
 	•	Support scaling and DR strategies in AWS
